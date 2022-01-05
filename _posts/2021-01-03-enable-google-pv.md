@@ -1,8 +1,9 @@
 ---
-title: Enable Google Page Views
+title: What makes an Article popular on Towards Data Science?
+
 author:
-  name: Dinesh Prasanth Moluguwan Krishnamoorthy
-  link: https://github.com/SilleBille
+  name: Dominik Polzer
+  link: https://github.com/polzerdo55862
 date: 2021-01-03 18:32:00 -0500
 categories: [Blogging, Tutorial]
 tags: [google analytics, pageviews]
@@ -11,17 +12,63 @@ tags: [google analytics, pageviews]
 
 This post is to enable Page Views on the [**Chirpy**][chirpy-homepage] theme based blog that you just built. This requires technical knowledge and it's recommended to keep the `google_analytics.pv.*` empty unless you have a good reason. If your website has low traffic, the page views count would discourage you to write more blogs. With that said, let's start with the setup.
 
-## Set up Google Analytics
+## Data Collection
 
-### Create GA account and property
+What I would like to briefly discuss is what data I thought is important and gives a hint on how successful an article will perform. Beside giving an answer to some basic statistical questions, I want to make an attempt to find explanations for the performance of the articles.
 
-First, you need to set up your account on Google analytics. While you create your account, you must create your first **Property** as well.
+Mike Sall`s conclusion in ["When is the best time to publish? Wrong question."](https://medium.com/data-lab/when-is-the-best-time-to-publish-wrong-question-8f0b15be89c2) was:
+What really matters is writing good stuff and, in turn, building a following.
 
-1. Head to <https://analytics.google.com/> and click on **Start Measuring**
-2. Enter your desired _Account Name_ and choose the desired checkboxes
-3. Enter your desired _Property Name_. This is the name of the tracker project that appears on your Google Analytics dashboard
-4. Enter the required information _About your business_
-5. Hit _Create_ and accept any license popup to set up your Google Analytics account and create your property
+This sounds like a very plausible insight to me. But what characterizes the "good stuff". And more importantly, can we map these characteristics into features in a data set?
+
+The challenges are probably not only the data collection, but also the way in which articles differ. A beginner tutorial would certainly be measured by other aspects than a scientific article or experience reports.
+But let's start from the beginning, let's start with the basic statistics about TDS articles, like:
+
+* How many articles have been published on TDS to date? And since when?
+* How many Claps do they usually get?
+* How often does a user usually clap? (Claps/Voters relation)
+
+To identify possible performance drivers, I analysed the correlation between performance (Claps and Voters) and the following characteristics:
+
+* Length (Minutes of read): e.g. Do longer articles get more claps?
+* Headlines: e.g. What characteristics of a headline result in a higher performance: Length, Numbers, Type of header
+* Visual Content: e.g. Do Articles with self-made images perform better?
+
+To be able to describe the above characteristics with data, I collected the following information from (all) TDS articles:
+
+**Table Articles**
+* Title, Headline
+* URL
+* Reading Time
+* Publication Date
+* Archive
+* Author
+* Clap_Count (Number of Claps)
+* Voter_Count (Number of Users clapped)
+* Response_Count
+
+**Table Figcaptions**
+* Caption
+* (Article ID)
+
+## Analysis
+
+The data set used for the analysis contains:
+Data from 44118 TDS articles with 211521 figures (from 38603 articles, 5515 articles haven't used images)
+
+In the sections below, I have addressed the following questions:
+
+* How many Articles published in recent years? And how did they perform?
+* Do longer articles get more claps?
+* How often does a user clap?
+* Do Articles with self-made images perform better?
+* Does the type and length of the headline influence the performance of the article?
+
+### How many articles has been published in the recent years?
+
+First of all, I dealt with the most basic questions: How many articles had been published via TDS and how did they perform.
+
+According to available data set, the "oldest" article in TDS was published on 21 November 2010. Nevertheless, only a handful of articles can be attributed to the years from 2010 to 2014. It is also not possible to tell whether these have already been published previously and subsequently added to TDS.
 
 ### Create Data Stream
 
