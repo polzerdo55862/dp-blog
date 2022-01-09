@@ -1,5 +1,5 @@
 ---
-title: Baysian Optimization
+title: Bayesian Hyperparameter Optimization
 
 author:
   name: Dominik Polzer
@@ -8,8 +8,6 @@ date: 2022-01-05 18:32:00 -0500
 categories: [Blogging, Tutorial]
 tags: [google analytics, pageviews]
 ---
-
-# Bayesian-Hyperparameter-Optimization
 
 ### Table of content
 
@@ -24,35 +22,74 @@ tags: [google analytics, pageviews]
 
 ## Introduction <a name="introduction"/>
 
-
 The performance of a machine learning method depends on the used data set and the
 chosen hyperparameter settings for the model training.
 Finding the optimal hyperparameter settings is crucial for building the best possible model
 for the given data set.
 
-This article describes the basic procedure for hyperparameter optimisation. Simple procedures such
-as grid search, which scan a defined hyperparameter space, reach their limits when the calculation
+This article describes the basic method for hyperparameter optimisation. Simple procedures such
+as grid search, which scan a defined hyperparameter space, is not very effective when the calculation
 of the loss function is computationally intensive.
 
-In order to reduce the computing power required to find the optimal hyperparameter settings,
-Baysian optimisation uses Bayes' theorem.
+What exactly I mean by this, I will try to describe briefly. In the context of this article, I use regression as an example to
+illustrate the procedure for finding the optimal hyperparameter settings. To estimate the performance of
+the generated model, we calculate the loss between predicted and actual values of a test training set that was not used to train the model.
 
-In simple terms, the Bayes' theorem is used to calculate the probability of an event based on its
+For example, if we choose polynomial regression as the regression algorithm, we have the possibility to adjust the model complexity
+by choosing the polynomial degree. Thus, the polynomial degree represents a hyperparameter of the polynomial regression.
+
+In order to find the polynomial degree that best reproduces the complexity of the problem and data set at hand, we could let the
+polynomial degree take on any conceivable value, calculate the performance of the generated model via the loss and then choose
+the polynomial degree at which the resulting model has shown the lowest loss.
+
+But which values are conceivable for the polynomial degree? - The polynomial degree can basically be any integer value. From experience,
+it can be said that most problems in fields such as engineering can be represented sufficiently accurately by models with polynomial degrees of less than 10.
+Based on this experience, we could limit the hyperparameter space, for example, to a polynomial degree between 1 and 20.
+
+In order to be sure to identify the polynomial degree at which the model shows the best performance,
+we would have to evaluate every possible hyperparameter setting in this defined hyperparameter space.
+We could implement a for-loop that performs the following calculation steps for each integer value between 0 and 20:
+
+1. Define the polynomial regression algorithm with the specified hyperparameter setting
+2. Build the model (using the train data set)
+3. Evaluate the model (using the validation or test data set)
+
+Afterwards we simply choose the polynomial degree for our model that shows the best performance in the evaluation process.
+
+<figure class="image">
+  <img src="/assets/img/posts/06_Bayesian Optimization/grid_search_polynomial_regression_example.png" style="width:100%">
+  <figcaption align = "center">
+    <b>Hyperparameter search: simple for-loop - Image by the author</b>
+  </figcaption>
+</figure>
+
+This approach is certainly valid for the dataset shown and relatively simple polynomial regression models, but reaches its
+limits when the datasets and hyperparameter space are large and complex and more computationally expensive algorithms are used.
+
+In order to reduce the computing power required to find the optimal hyperparameter settings,
+Baysian optimisation uses Bayes' theorem. In simple terms, the Bayes' theorem is used to calculate the probability of an event, based on its
 association with another event [Hel19].
 
-<img src="/img/bayes_theorem.png" style="width:100%">
-<figcaption align = "center">
+<figure class="image">
+  <img src="/assets/img/posts/06_Bayesian Optimization/bayes_theorem.png" style="width:100%">
+  <figcaption align = "center">
     <b>Bayes' theorem</b>
-</figcaption>
+  </figcaption>
+</figure>
 
 A popular application ot the Bayes' theorem is the diesease detection. For rapid tests one is interested in how high the actual probability is,
 that a positive tested person actually has the diseas.[Fah16]
 
 In the context of hyperparameter optimisation, we would like to infer the probability distribution of the loss values of a second non-calculated
-hyperparameter combination by calculating the loss of a hyperparameter combination.
-
-With the help of some calculated "true" values of the loss function, we would like to model the function of
+hyperparameter combination. With the help of some calculated "true" values of the loss function, we would like to model the function of
 the loss function over the entire hyperparameter space - a so-called surrogate function.
+
+<figure class="image">
+  <img src="/assets/img/posts/06_Bayesian Optimization/gaussian_process_example.png" style="width:100%">
+  <figcaption align = "center">
+    <b>Bayes' theorem</b>
+  </figcaption>
+</figure>
 
 In Gauss Process Regression, the resulting model provides not only an approximation of the true loss function but also the confidence interval to the non-calculated function areas.
 This information is used in the following to identify the hyperparameter combination whose calculation brings the greatest "information gain",
@@ -65,8 +102,12 @@ hyperparameter optimization. More specifically, we want to model a possible corr
 
 **Independend variable:** LSTAT - % lower status of the population
 
-<img src="/img/boston_housing_data_set.png" style="width:100%">
-<figcaption align = "center"><b>Boston housing data set - Image by the author (Data: [CST79])</b></figcaption>
+<figure class="image">
+  <img src="/assets/img/posts/06_Bayesian Optimization/boston_housing_data_set.png" style="width:100%">
+  <figcaption align = "center">
+    <b>Boston housing data set - Image by the author (Data: [CST79])</b>
+  </figcaption>
+</figure>
 
 In the following, we want to use Support Vector Regression (SVR) for model building.
 
@@ -75,42 +116,65 @@ In the following, we want to use Support Vector Regression (SVR) for model build
 The functionality of the Support Vector Regression (SVR) is based on the Support Vector Machine (SVM)
 and will first be explained with a simple example. We are looking for the linear function:
 
-<img src="/img/function_of_support_vector_regression_slack_variable.png" style="width:100%">
-<figcaption align = "center"><b>Boston housing data set - Image by the author (Data: [CST79])</b></figcaption>
+<figure class="image">
+  <img src="/assets/img/posts/06_Bayesian Optimization/function_of_support_vector_regression_slack_variable.png" style="width:100%">
+  <figcaption align = "center">
+    <b>Boston housing data set - Image by the author (Data: [CST79])</b>
+  </figcaption>
+</figure>
 
 To evaluate the performance of the model for various hyperparameter settings a
 suitable loss function needs to be defined. An often used cost function for
 regression problems is the Mean Squared Error (MSE):
 
-
-<img src="/img/loss_function.png" style="width:100%">
-<figcaption align = "center"><b>Loss Function: Mean Squared Error (MSE) - Image by the author</b></figcaption>
+<figure class="image">
+  <img src="/assets/img/posts/06_Bayesian Optimization/loss_function.png" style="width:100%">
+  <figcaption align = "center">
+    <b>Booss Function: Mean Squared Error (MSE) - Image by the author</b>
+  </figcaption>
+</figure>
 
 The performance of the machine learning estimator depends on the hyperparameters and the dataset used for training and validation. In order to obtain a generalised assessment of the performance of the algorithm used, the statistical procedure k-fold cross-validation (CV) is used in the following.
 
 Therefor the data set is split in k subsets. Following k-1 subsets are used as training data set, one for validation. After the model was build, the MSE for the validation data set is calculated. This procedure is repeated until each subset has been used once as a validation data set. The CV score is then calculated as the average of the MSE values.
 
-<img src="/img/cross_val_score.png" style="width:100%">
-<figcaption align = "center"><b>K-fold Cross Validation – Image by the author (inspired by [Sic18])"</b></figcaption>
+<figure class="image">
+  <img src="/assets/img/posts/06_Bayesian Optimization/cross_val_score.png" style="width:100%">
+  <figcaption align = "center">
+    <b>BK-fold Cross Validation – Image by the author (inspired by [Sic18])</b>
+  </figcaption>
+</figure>
 
 The target of hyperparameter optimization is to find the optimal hyperparameter settings,
 in this case, where the Loss (e.g. the CV Score) is minimal (in the following we try find
 the maximum for the negative CV score).
 
 * **Objective function:** The objective function of a mathematical optimization problems is the real-valued function which should be minimized or maximized []
-<img src="/img/black_box_function_evaluation.png" style="width:100%">
-<figcaption align = "center"><b>Optimization problem- Image by the author"</b></figcaption>
+<figure class="image">
+  <img src="/assets/img/posts/06_Bayesian Optimization/black_box_function_evaluation.png" style="width:100%">
+  <figcaption align = "center">
+    <b>Bptimization problem- Image by the author</b>
+  </figcaption>
+</figure>
 
 * **Black-box function:** A black-box function is a system where the internal workings is unknown. Systems like transistors, engines and human brains are often described as black-box systems.
-<img src="/img/black_box_function.png" style="width:100%">
-<figcaption align = "center"><b>Black-box function – Image by the author (inspired by [Sic18])</b></figcaption>
+<figure class="image">
+  <img src="/assets/img/posts/06_Bayesian Optimization/black_box_function.png" style="width:100%">
+  <figcaption align = "center">
+    <b>lack-box function – Image by the author (inspired by [Sic18])r</b>
+  </figcaption>
+</figure>
 
 What we could do, is just calculate the value of f(x) for mupltiple hyperparameter settings
 in the defined hyperparameter space and choose the hyperparameter combination with the lowest
 loss - like grid is doing it.
 
-<img src="/img/black_box_calculation.png" style="width:100%">
-<figcaption align = "center"><b>Sample calculation of the black-box function for different hyperparameter settings – Image by the Author</b></figcaption>
+<figure class="image">
+  <img src="/assets/img/posts/06_Bayesian Optimization/black_box_calculation.png" style="width:100%">
+  <figcaption align = "center">
+    <b>Slample calculation of the black-box function for different hyperparameter settings – Image by the Author</b>
+  </figcaption>
+</figure>
 
 ## Grid Search <a name="grid search"/>
 
@@ -119,8 +183,12 @@ Grid Search is the easiest way to search for the optimal Hyperparameter settings
 1. Choose an appropriate scale of your hypparameters and define a search space
 2. Iterate in steps over the defined space and calculate the value of te black-box function - here the cross-val. score
 
-<img src="/img/grid_search_example.png" style="width:100%">
-<figcaption align = "center"><b>s – Image by the Author</b></figcaption>
+<figure class="image">
+  <img src="/assets/img/posts/06_Bayesian Optimization/grid_search_example.png" style="width:100%">
+  <figcaption align = "center">
+    <b>Grid search illustration – Image by the Author</b>
+  </figcaption>
+</figure>
 
 # From Grid to Baysian Optimization <a name="grid to baysian"/>
 
@@ -128,8 +196,12 @@ Definitely a valid approach, at least for so called “cheap” black-box functi
 But what if the evaluation of the function is costly, so the computational time and/or cost to calculate CV is high?
 In this case it may makes sense to think about more “intelligent” ways to find the optimal value. [Cas13]
 
-<img src="/img/cheap_and_costly_black_box_function.png" style="width:100%">
-<figcaption align = "center"><b>K-fold Cross Validation – Image by the author (inspired by [Sic18])"</b></figcaption>
+<figure class="image">
+  <img src="/assets/img/posts/06_Bayesian Optimization/cheap_and_costly_black_box_function.png" style="width:100%">
+  <figcaption align = "center">
+    <b>Cheap and costly black-box functions – Image by the Author</b>
+  </figcaption>
+</figure>
 
 One way is to define a "cheap" Surrogate Function.
 The Surrogate Function should approximates the black-box function f(x) [Cas13].
@@ -159,14 +231,22 @@ In order to be able to map the function with sufficient accuracy for the defined
 hyperparameter space, this range must be appropriately fine-granularly ebased.
 In this case we assume a predefined hyperparameter space (epsilon = 1 - 15).
 
-<img src="/img/hyperparameter_evaluation_2d_gif_step_size_1.1.png" style="width:100%">
-<figcaption align = "center"><b>K-fold Cross Validation – Image by the author (inspired by [Sic18])"</b></figcaption>
+<figure class="image">
+  <img src="/assets/img/posts/06_Bayesian Optimization/hyperparameter_evaluation_2d_gif_step_size_1.1.png" style="width:100%">
+  <figcaption align = "center">
+    <b>Grid Search example – Image by the Author</b>
+  </figcaption>
+</figure>
 
 In total, the time needed to compute the needed sample values and the surrogate function,
 should be less time-consuming than calculating each point in the hyperparameter space.
 
-<img src="/img/evaluation_steps.png" style="width:100%">
-<figcaption align = "center"><b>K-fold Cross Validation – Image by the author (inspired by [Sic18])"</b></figcaption>
+<figure class="image">
+  <img src="/assets/img/posts/06_Bayesian Optimization/evaluation_steps.png" style="width:100%">
+  <figcaption align = "center">
+    <b>Evaluation steps: Grid Search vs. Baysian Optimization – Image by the Author</b>
+  </figcaption>
+</figure>
 
 ### Surrogate Function - the Gaussian Process Regression
 
@@ -213,9 +293,13 @@ In addition to the Expected Improvement the following Acquisition Functions are 
 - Entropy search
 - Predictive entropy
 
+<figure class="image">
+  <img src="/assets/img/posts/06_Bayesian Optimization/baysian_optimization_plots.png" style="width:100%">
+  <figcaption align = "center">
+    <b>Baysian Optimization – Image by the Author</b>
+  </figcaption>
+</figure>
 
-<img src="/img/baysian_optimization_plots.png" style="width:100%">
-<figcaption align = "center"><b>K-fold Cross Validation – Image by the author (inspired by [Sic18])"</b></figcaption>
 
 ## References
 
