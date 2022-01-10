@@ -80,9 +80,22 @@ association with another event [Hel19].
 A popular application ot the Bayes' theorem is the diesease detection. For rapid tests one is interested in how high the actual probability is,
 that a positive tested person actually has the diseas.[Fah16]
 
-In the context of hyperparameter optimisation, we would like to infer the probability distribution of the loss values of a second non-calculated
-hyperparameter combination. With the help of some calculated "true" values of the loss function, we would like to model the function of
-the loss function over the entire hyperparameter space - a so-called surrogate function.
+In the context of hyperparameter optimisation, we would like to predict the probability distribution of the loss value for any possible hyperparameter
+combinitation in the defined hyperparameter space. With the help of some calculated "true" values of the loss function, we would like to model the function of
+the loss function over the entire hyperparameter space - a so-called surrogate function. In our example, we could calculate the resulting loss for a polynomial
+degree of 2, 8 and 16 and use regression analysis to generate a function that approximates the loss over the entire hyperparameter space from 1 to 20.
+
+In Gaussian Process Regression, the resulting model provides not only an approximation of the true loss function but also the confidence interval to the
+non-calculated function areas. Simply put, the smaller the confidence interval (here: grey background) at a point in the function, the more certain the
+model is that the mean value (here: black curve) represents the actual loss value. If one would like to increase the accuracy of the approximation of the
+regression function, one could, for example, increase the size of the training data set. Since in our case, the loss values can be calculated for any
+hyperparameter combination, we can simply choose a few hyperparameters for which we want to determine the resulting loss of the model.
+
+But which hyperparameter values should we choose in order to get the best approximation to the true loss function with as few calculation steps as possible? -
+Probably the most obvious would be to choose a hyperparameter value where the prediction of the current model has a large confidence interval.
+
+These and similar considerations are mapped into an acquisition function in the Baysian hyperparameter optimisation and help in the selection of the
+hyperparameter settings that provide the greatest "information gain" for the modelling of the Surrogate Function.
 
 <figure class="image">
   <img src="/assets/img/posts/06_Bayesian Optimization/gaussian_process_example.png" style="width:100%">
@@ -91,12 +104,8 @@ the loss function over the entire hyperparameter space - a so-called surrogate f
   </figcaption>
 </figure>
 
-In Gauss Process Regression, the resulting model provides not only an approximation of the true loss function but also the confidence interval to the non-calculated function areas.
-This information is used in the following to identify the hyperparameter combination whose calculation brings the greatest "information gain",
-which will probably help the most to model an accurate Surrogate Function.
-
-In the following, the Boston Housing data set (https://www.cs.toronto.edu/~delve/data/boston/bostonDetail.html) is used to illustrate the procedure for
-hyperparameter optimization. More specifically, we want to model a possible correlation between MEDV and LSTAT.
+In order to be able to explain this concept step by step with a more realistic example, I use the Boston Housing Data set for the following
+chapters and would like to model the relationship between "MEDV" and "LSTAT" by means of a Support Vector Regression Model.
 
 **Target varibale:** MEDV - Median value of owner-occupied homes in $1000's
 
