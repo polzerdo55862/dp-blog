@@ -100,12 +100,12 @@ hyperparameter settings that provide the greatest "information gain" for the mod
 <figure class="image">
   <img src="/assets/img/posts/06_Bayesian Optimization/gaussian_process_example.png" style="width:100%">
   <figcaption align = "center">
-    <b>Bayes' theorem</b>
+    <b>Example posteriori gaussian process - Image by the author</b>
   </figcaption>
 </figure>
 
 In order to be able to explain this concept step by step with a more realistic example, I use the Boston Housing Data set for the following
-chapters and would like to model the relationship between "MEDV" and "LSTAT" by means of a Support Vector Regression Model.
+chapters. I want to utilize the support vector regression algorithm to build a model which approximates the correlation between:
 
 **Target varibale:** MEDV - Median value of owner-occupied homes in $1000's
 
@@ -118,12 +118,24 @@ chapters and would like to model the relationship between "MEDV" and "LSTAT" by 
   </figcaption>
 </figure>
 
-In the following, we want to use Support Vector Regression (SVR) for model building.
+## Build a first model - Support Vector Regression
 
-## Support Vector Regression
+In order to be able to understand the following hyperparameter optimisation steps,
+I will briefly describe the Support Vector Regression, how it works and the associated hyperparameters. If you are familiar with the
+Support Vector Regression feel free to skip the following section.
 
-The functionality of the Support Vector Regression (SVR) is based on the Support Vector Machine (SVM)
-and will first be explained with a simple example. We are looking for the linear function:
+The functionality of the Support Vector Regression (SVR) is based on the Support Vector Machine (SVM). Basically we are looking for the linear function:
+
+$$ \nabla_\boldsymbol{x} J(\boldsymbol{x}) $$
+
+⟨w, x⟩ describes the cross product. The goal of SV Regression is to find a straight line as model for the data points whereas
+the parameters of the straight line should be defined in such a way that the line is as ‘flat’ as possible. This can be achieved
+by minimizing the norm: [Wei18][Ber85]
+
+$$ \nabla_\boldsymbol{x} J(\boldsymbol{x}) $$
+
+For the model building process it does not matter how far the data points are from the modeled straight line as long as they are
+within a defined range (-ϵ to +ϵ). Deviations that exceed the specified limit ϵ are not allowed.
 
 <figure class="image">
   <img src="/assets/img/posts/06_Bayesian Optimization/function_of_support_vector_regression_slack_variable.png" style="width:100%">
