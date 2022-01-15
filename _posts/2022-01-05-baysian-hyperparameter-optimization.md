@@ -124,9 +124,10 @@ In order to be able to understand the following hyperparameter optimisation step
 I will briefly describe the Support Vector Regression, how it works and the associated hyperparameters. If you are familiar with the
 Support Vector Regression feel free to skip the following section.
 
-The functionality of the Support Vector Regression (SVR) is based on the Support Vector Machine (SVM). Basically we are looking for the linear function:
+The $$P_{xi}$$ functionality of the Support Vector Regression (SVR) is based on the Support Vector Machine (SVM). Basically we are looking for the linear function:
 
-$$ \nabla_\boldsymbol{x} J(\boldsymbol{x}) $$
+$$ \[ P_{xi}=\overline{U_{x}}+\sigma_{x}\frac{\sum^{Nu}_{k}D_{kx}\times
+    \left( \frac{S_{ki}-\overline{U_{k}}}{\sigma_{k}}\right)}{\sum^{Nu}_{k}D_{kx}} \]$$
 
 ⟨w, x⟩ describes the cross product. The goal of SV Regression is to find a straight line as model for the data points whereas
 the parameters of the straight line should be defined in such a way that the line is as ‘flat’ as possible. This can be achieved
