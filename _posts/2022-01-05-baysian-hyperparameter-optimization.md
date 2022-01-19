@@ -19,7 +19,6 @@ tags: [google analytics, pageviews]
     * [Baysian Optimization](#baysian opt)
 
 
-
 ## Introduction <a name="introduction"/>
 
 The performance of a machine learning method depends on the used data set and the
@@ -70,12 +69,11 @@ In order to reduce the computing power required to find the optimal hyperparamet
 Baysian optimisation uses Bayes' theorem. In simple terms, the Bayes' theorem is used to calculate the probability of an event, based on its
 association with another event [Hel19].
 
-<figure class="image">
-  <img src="/assets/img/posts/06_Bayesian Optimization/bayes_theorem.png" style="width:100%">
-  <figcaption align = "center">
-    <b>Bayes' theorem</b>
-  </figcaption>
-</figure>
+So if we know the probability of observing the event $$A$$ and $$B$$ independently from each other
+(the so called priori probability) and the probability of event $$B$$ occuring given that $$A$$ is true (the so called conditional probability) we are able
+to calculate the probability of event $$A$$ occuring given that $$B$$ is true (conditional probability) as follows:
+
+$$P(A| B) = \frac{P(B |  A) \cdot P(A)}{P(B)}$$
 
 A popular application ot the Bayes' theorem is the diesease detection. For rapid tests one is interested in how high the actual probability is,
 that a positive tested person actually has the diseas.[Fah16]
@@ -126,17 +124,26 @@ Support Vector Regression feel free to skip the following section.
 
 The $$P_{xi}$$ functionality of the Support Vector Regression (SVR) is based on the Support Vector Machine (SVM). Basically we are looking for the linear function:
 
-$$ \[ P_{xi}=\overline{U_{x}}+\sigma_{x}\frac{\sum^{Nu}_{k}D_{kx}\times
-    \left( \frac{S_{ki}-\overline{U_{k}}}{\sigma_{k}}\right)}{\sum^{Nu}_{k}D_{kx}} \]$$
+$$f(x)=\langle w, x \rangle + b$$
 
 ⟨w, x⟩ describes the cross product. The goal of SV Regression is to find a straight line as model for the data points whereas
 the parameters of the straight line should be defined in such a way that the line is as ‘flat’ as possible. This can be achieved
 by minimizing the norm: [Wei18][Ber85]
 
-$$ \nabla_\boldsymbol{x} J(\boldsymbol{x}) $$
+$$\| w \|_2 := \sqrt{ ( w_1 )^2 + ( w_2 )^2 + \dotsb + ( w_n )^2 } = \left( \sum_{i=1}^n ( w_i )^2 \right)^{1/2} \label{eq:norm}$$
 
 For the model building process it does not matter how far the data points are from the modeled straight line as long as they are
 within a defined range (-ϵ to +ϵ). Deviations that exceed the specified limit ϵ are not allowed.
+
+$$
+\begin{align*}
+  & minimize \quad \frac{1}{2} \cdot \| w \|^2 \\
+  & subject~to~\left( \begin{array}{ccc}
+      y_i - \langle w, x_i \rangle -b<=\epsilon \\
+      \langle w, x_i \rangle +b-y_i<=\epsilon
+    \end{array} \right)
+\end{align*}
+$$
 
 <figure class="image">
   <img src="/assets/img/posts/06_Bayesian Optimization/function_of_support_vector_regression_slack_variable.png" style="width:100%">
@@ -145,33 +152,76 @@ within a defined range (-ϵ to +ϵ). Deviations that exceed the specified limit 
   </figcaption>
 </figure>
 
+The figure above describes the “punishment ”of deviations exceeding the amount of ϵ using a linear loss function. The loss function is called the kernel. Besides the linear kernel, the polynomial or RBF kernel are frequently in use. [Smo04][Yu12][Bur98]
+Thus, the formulation according to Vapnik is as follows:
+
+$$
+\begin{align*}
+  & minimize \quad \frac{1}{2} \cdot \| w \|^2 + C \sum_{i=1}^l (\zeta_i+\zeta_i^*) \\
+  & subject~to~\left( \begin{array}{ccc}
+      \quad y_i - \langle w, x_i \rangle -b<=\epsilon + \zeta_i \\
+      y_i - \langle w, x_i \rangle -b<=\epsilon + \zeta_i \\
+      \zeta_i,\zeta_i^*<=0
+    \end{array} \right)
+\end{align*}
+$$
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 To evaluate the performance of the model for various hyperparameter settings a
-suitable loss function needs to be defined. An often used cost function for
+suitable loss function needs to be defined. An often used cost function $$L(f,x,y)$$ for
 regression problems is the Mean Squared Error (MSE):
 
-<figure class="image">
-  <img src="/assets/img/posts/06_Bayesian Optimization/loss_function.png" style="width:100%">
-  <figcaption align = "center">
-    <b>Booss Function: Mean Squared Error (MSE) - Image by the author</b>
-  </figcaption>
-</figure>
+$$
+L(f,x,y) = MSE = \frac{1}{n}\sum_{i=1}^n(f(x)-y)^2
+$$
 
-The performance of the machine learning estimator depends on the hyperparameters and the dataset used for training and validation. In order to obtain a generalised assessment of the performance of the algorithm used, the statistical procedure k-fold cross-validation (CV) is used in the following.
+where $$f = A(D)$$ represents the function/model returned by the algorithm $$A$$ when trained on the trainings data set $$D = z_1,...,z_n$$.
+$$y$$ are the observed values of the variable being predicted (In terms of hyperparameter optimisation, the observed values are the calculated
+losses (e.g. the Mean Squared Error) and the variable $$x$$ describes the hyperparameters.
 
-Therefor the data set is split in k subsets. Following k-1 subsets are used as training data set, one for validation. After the model was build, the MSE for the validation data set is calculated. This procedure is repeated until each subset has been used once as a validation data set. The CV score is then calculated as the average of the MSE values.
 
-<figure class="image">
-  <img src="/assets/img/posts/06_Bayesian Optimization/cross_val_score.png" style="width:100%">
-  <figcaption align = "center">
-    <b>BK-fold Cross Validation – Image by the author (inspired by [Sic18])</b>
-  </figcaption>
-</figure>
+The performance of the machine learning estimator depends on the hyperparameters and the dataset used for training and validation. Thats the reason, why
+we are usually not just choosing a part of the data set as trainings set and another as test set and calculating the squared error for each observation of the
+test data set.
 
-The target of hyperparameter optimization is to find the optimal hyperparameter settings,
-in this case, where the Loss (e.g. the CV Score) is minimal (in the following we try find
-the maximum for the negative CV score).
+To at least mitigate this effect on the performance assessment and get a more generalised assessment, the statistical procedure k-fold cross-validation (CV)
+is used in the following.
 
-* **Objective function:** The objective function of a mathematical optimization problems is the real-valued function which should be minimized or maximized []
+Therefor the data set is split in $$K$$ subsets. Afterwards $$k-1$$ subsets are used as training data set, one for validation. After the model was build,
+the MSE for the validation data set is calculated. This procedure is repeated until each subset has been used once as a validation data set.
+
+Thus, K-models are formed and evaluated in the course of the cross validation. The cross validation score is usually calculated
+as an average value from the individual Mean Square Errors.
+
+$$CV(D, \lambda) = \frac{1}{k}\sum_{k=1}^K \frac{1}{m} \sum_{z_i \in T_k}L(A_(\lambda)(D_k), z_i)$$
+
+For example, if you use the sklearn module sklearn.model_selection.cross_val_score and want to use the MSE as the scoring parameter,
+you will notice that only the negated MSE can be selected. This is due to the uniform convention of trying to maximise scores in all
+cases. Therefore, cost functions are always negated.
+
+<script src="https://gist.github.com/polzerdo55862/ac8cd911802b574693cbe5aa1247c837.js"></script>
+
+
+
+
+The function of the negative cross validation score thus represents the objective function of the mathematical optimization problem.
+The objective is to identify the optimal hyperparameter settings, i.e. the hyperparameter values for which the trained models show
+the best performance, i.e. the negative cross validation score is maximal.
+
+**Objective function:** The objective function of a mathematical optimization problems is the real-valued function which should be minimized or maximized.
+
 <figure class="image">
   <img src="/assets/img/posts/06_Bayesian Optimization/black_box_function_evaluation.png" style="width:100%">
   <figcaption align = "center">
@@ -179,7 +229,14 @@ the maximum for the negative CV score).
   </figcaption>
 </figure>
 
-* **Black-box function:** A black-box function is a system where the internal workings is unknown. Systems like transistors, engines and human brains are often described as black-box systems.
+Since we have no direct knowledge about the analytical form of f(x) at the first moment, we speak of a so-called black-box function.
+
+A black-box function is a system where the internal workings is unknown.
+Systems like transistors, engines and human brains are often described as black-box systems.
+
+In our case, the hyperparameters represent the input parameters of the function, for which only it is not directly known how it influences e.g. the cross validation score.
+Each point on the function curve must be calculated more or less elaborately.
+
 <figure class="image">
   <img src="/assets/img/posts/06_Bayesian Optimization/black_box_function.png" style="width:100%">
   <figcaption align = "center">
@@ -187,9 +244,12 @@ the maximum for the negative CV score).
   </figcaption>
 </figure>
 
-What we could do, is just calculate the value of f(x) for mupltiple hyperparameter settings
-in the defined hyperparameter space and choose the hyperparameter combination with the lowest
-loss - like grid is doing it.
+## Finding the optimal hyperparameter settings
+
+In order to find the optimal hyperparameter settings, we could theoretically calculate the cross validation score
+for each possible hyperparameter combination and finally choose the hyperparameter that shows the best performance in the evaluation.
+
+The following figure shows the procedure for the hyperparameter Space $$Epsilon = 0.1-16$$, where $$C$$ constantly takes the value 7.
 
 <figure class="image">
   <img src="/assets/img/posts/06_Bayesian Optimization/black_box_calculation.png" style="width:100%">
@@ -198,12 +258,37 @@ loss - like grid is doing it.
   </figcaption>
 </figure>
 
+The hyperparameter optimization process Grid Search works according to this procedure.
+Grid Search thus represents the simplest type of hyperparameter optimization.
+
+We thus build up the function approximately with each calculation step bit by bit.
+
+<figure class="image">
+  <img src="/assets/img/posts/06_Bayesian Optimization/black_box_calculation.png" style="width:100%">
+  <figcaption align = "center">
+    <b>Build up black-box function step for step – Image by the Author</b>
+  </figcaption>
+</figure>
+
+How close we actually come to the optimum in the area under consideration thus depends decisively on the step size.
+However, if we choose a very small step size, have a large number of hyperparameters,
+a large data set and possibly also use an algorithm that functions according to a relatively
+computationally intensive principle, the computational effort required for the search for the
+optimal hyperparameters increases rapidly.
+
+<figure class="image">
+  <img src="/assets/img/posts/06_Bayesian Optimization/2d_evaluation_various_step_sizes.gif" style="width:100%">
+  <figcaption align = "center">
+    <b>Calculated black-box using various step sizes – Image by the Author</b>
+  </figcaption>
+</figure>
+
+
 ## Grid Search <a name="grid search"/>
 
-Grid Search is the easiest way to search for the optimal Hyperparameter settings.
-
-1. Choose an appropriate scale of your hypparameters and define a search space
-2. Iterate in steps over the defined space and calculate the value of te black-box function - here the cross-val. score
+As shown in the following figure, we define a "grid" via the hyperparameter Space. If we consider the kernel to be fixed
+for the moment, the following two-dimensional hyperparameter Sapce results.
+($$C\_min = 1$$, $$C\_max = 50$$, $$Epsilon\_min = 1$$, $$Epsilon\_max = 30$$, $$step\_size = 1$$)
 
 <figure class="image">
   <img src="/assets/img/posts/06_Bayesian Optimization/grid_search_example.png" style="width:100%">
@@ -316,7 +401,7 @@ In addition to the Expected Improvement the following Acquisition Functions are 
 - Predictive entropy
 
 <figure class="image">
-  <img src="/assets/img/posts/06_Bayesian Optimization/baysian_optimization_plots.png" style="width:100%">
+  <img src="/assets/img/posts/06_Bayesian Optimization/Visualize_baysian_opt.gif" style="width:100%">
   <figcaption align = "center">
     <b>Baysian Optimization – Image by the Author</b>
   </figcaption>
