@@ -21,39 +21,133 @@ tags: [google analytics, pageviews]
 
 ## Introduction <a name="introduction"/>
 
-The performance of a machine learning method depends on the used data set and the
-chosen hyperparameter settings for the model training.
-Finding the optimal hyperparameter settings is crucial for building the best possible model
-for the given data set.
+Hyperparameters are parameters that are set before the actual training process to control the learning process. For the decision tree we limit the maximum number of nodes
+(the maximum depth of the tree); for polynomial regression the polynomial degree; for support vector regression the kernel,
+the regularisation parameter C and the margin of tolerance Epsilon. All these parameters influence the training process and thus the performance of the resulting model.
 
-This article describes the basic method for hyperparameter optimisation. Simple procedures such
-as grid search, which scan a defined hyperparameter space, is not very effective when the calculation
-of the loss function is computationally intensive.
+The search for optimal hyperparameters is called Hyperparameter Optimization. The search is for the hyperparameter combination for which the trained model shows
+the best performance for the given data set. Popular methods for this are Grid Search, Random Search and Baysian Optimisation. I will explain the exact difference
+in the approach in the course of the article. The decisive factor for choosing the right optimisation method is the computational effort required to evaluate the
+various different hyperparameter settings.
 
-What exactly I mean by this, I will try to describe briefly. In the context of this article, I use regression as an example to
-illustrate the procedure for finding the optimal hyperparameter settings. To estimate the performance of
-the generated model, we calculate the loss between predicted and actual values of a test training set that was not used to train the model.
+If we want to know how the resulting model performs for a specific hyperparameter combination, we have no choice but to build the model using one subset of the dataset and then evaluate it using a second subset.
+build the model using a subset of the data set and then evaluate it using a second subset. The functioning of the algorithm, the
+selected hyperparameter settings and the size of the dataset determine to a large extent how computationally expensive the model building is. Especially with very
+It is worth going beyond the principle of "simple" trial and error, especially in the case of very computationally intensive model-building processes.
 
-For example, if we choose polynomial regression as the regression algorithm, we have the possibility to adjust the model complexity
-by choosing the polynomial degree. Thus, the polynomial degree represents a hyperparameter of the polynomial regression.
+For illustrative purposes, consider a simple regression problem that we would like to solve using polynomial regression. As already mentioned in the first step we
+choose settings for the hyperparameters that seem plausible to us (e.g. based on prior knowledge). Most problems from fields such as engineering or physics, for
+example, can usually be solved sufficiently well with polynomial regression models with polynomial degrees of less than 10. can be sufficiently well explained.
 
-In order to find the polynomial degree that best reproduces the complexity of the problem and data set at hand, we could let the
-polynomial degree take on any conceivable value, calculate the performance of the generated model via the loss and then choose
-the polynomial degree at which the resulting model has shown the lowest loss.
+For the following evaluation we set the hyperparameter Space to polynomial degrees between 0 - 20. To ensure that we identify the optimal hyperparameter value in
+the defined hyperparameter space, we could build a model for each polynomial degree and evaluate it. In regression, we usually compare the absolute or squared deviation
+of the test values from the predicted values of the model. For more details I explain this procedure below.
 
-But which values are conceivable for the polynomial degree? - The polynomial degree can basically be any integer value. From experience,
-it can be said that most problems in fields such as engineering can be represented sufficiently accurately by models with polynomial degrees of less than 10.
-Based on this experience, we could limit the hyperparameter space, for example, to a polynomial degree between 1 and 20.
-
-In order to be sure to identify the polynomial degree at which the model shows the best performance,
-we would have to evaluate every possible hyperparameter setting in this defined hyperparameter space.
-We could implement a for-loop that performs the following calculation steps for each integer value between 0 and 20:
+With a for-loop, we could simply perform the following steps for each possible hyperparameter and cache the results of each run:
 
 1. Define the polynomial regression algorithm with the specified hyperparameter setting
 2. Build the model (using the train data set)
 3. Evaluate the model (using the validation or test data set)
 
 Afterwards we simply choose the polynomial degree for our model that shows the best performance in the evaluation process.
+
+[comment]: <> (Hyperparameter sind parameter welche vor dem eigentlich Trainingsprozess festgelegt werden um den Lernprozess zu steuern. Beim Decision Tree begrenzen wir die)
+
+[comment]: <> (die maximale Anzahl der nodex &#40;die maximale Tiefe des Baums&#41;; bei der Polynomial Regression den Polynomgrad; bei der Support Vector Regression den Kernel, den Regularization)
+
+[comment]: <> (Parameter C und die margin of tolerance Epsilon. All diese Parameter beeinflussen den Trainingsprozess und damit die Performance des resultierenden Models.)
+
+[comment]: <> (Die Suche nach optimalen Hyperparametern is called Hyperparameter Optimization. Gesucht wird die Hyperparameter Kombination für die das trainierte model die beste)
+
+[comment]: <> (performance für den given data set zeigt. Populäre Methode hierfür sind Grid Search, Random Search and Baysian Optimization. Den genauen Unterschied in der)
+
+[comment]: <> (Vorgehensweise erläutere ich im Laufe des Artikels. Der entscheidende Faktor, für die Wahl des richtigen Optimierungsverfahren, ist der Rechenaufwand zur evaluation)
+
+[comment]: <> (verschiedenster Hyperparameter Settings.)
+
+[comment]: <> (Möchten wir zu einer speziellen Hyperparameter Kombination wissen, wie das resultierende Model performt, bleibt uns im ersten Moment nichts anderes übrig, als)
+
+[comment]: <> (das Model mithilfe eines Subsets des Datensatzes zu bilden und anschließend anhand eines zweiten Subsets zu evaluieren. Die Funktionsweise des Algorithmus, die)
+
+[comment]: <> (gewählten Hyperparameter Settings und die größe des Datensatzes bestimmen dabei maßgebend, wie Rechenaufwendig die Modelbildung ist. Gerade bei sehr)
+
+[comment]: <> (rechenaufwendigen Modellbildungsprozessen, lohnt es sich, über das Prinzip des "einfachen" Ausprobierens hinauszugehen.)
+
+[comment]: <> (Betrachten zur Anschaulichkeit ein einfaches Regressionsproblem, welches wir mithilfe der Polynomial Regression lösen möchten. Wie bereits erwähnt)
+
+[comment]: <> (wählen wir im ersten Schritt Settings für die Hyperparameter die uns &#40;z.B. anhand von Vorwissen&#41; als plausibel erscheinen. Die meisten Probleme aus)
+
+[comment]: <> (Bereichen wie des Ingenieurwesens oder der Physik können beispielsweise in der Regel mit Polynomial Regressionsmodelle mit Polynomgraden von unter 10)
+
+[comment]: <> (ausreichend gut angenehärt werden.)
+
+[comment]: <> (Für die folgenden Evaluierung legen wir den Hyperparameter Space auf Polynomgrade zwischen 0 - 20 fest. Um sicherzugehen, das wir den optimalen)
+
+[comment]: <> (Hyperparameter Wert im definierten Hyperparameter Space zu identifizieren, könnten wir für jeden Polynomgrad ein Model bilden uns dieses Evaluieren.)
+
+[comment]: <> (Bei der Regression vergleichen wir in der Regel die absolute oder quadratische Abweichung der Testwerte von den predicteten Werte des Models. Genauer)
+
+[comment]: <> (erkläre ich dieses vorgehen weiter unten.)
+
+[comment]: <> (Mit einer for-loop könnten wir die folgenden Schritte einfach für jeden möglichen Hyperparameter ausführen und die Ergebnisse eines jeden Durchlaufes zwischenspeichern:)
+
+[comment]: <> (1. Define the polynomial regression algorithm with the specified hyperparameter setting)
+
+[comment]: <> (2. Build the model &#40;using the train data set&#41;)
+
+[comment]: <> (3. Evaluate the model &#40;using the validation or test data set&#41;)
+
+[comment]: <> (Afterwards we simply choose the polynomial degree for our model that shows the best performance in the evaluation process.)
+
+[comment]: <> (___________________________)
+
+[comment]: <> (The performance of a machine learning method depends massivly on chosen hyperparameter settings.)
+
+[comment]: <> (Finding the optimal hyperparameter settings is crucial for building the best possible model)
+
+[comment]: <> (for the given data set.)
+
+[comment]: <> (This article describes the basic method for hyperparameter optimisation. Simple procedures such)
+
+[comment]: <> (as grid search, which scan a defined hyperparameter space, is not very effective when the calculation)
+
+[comment]: <> (of the loss function is computationally intensive.)
+
+[comment]: <> (What exactly I mean by this, I will try to describe briefly. In the context of this article, I use regression as an example to)
+
+[comment]: <> (illustrate the procedure for finding the optimal hyperparameter settings. To estimate the performance of)
+
+[comment]: <> (the generated model, we calculate the loss between predicted and actual values of a test training set that was not used to train the model.)
+
+[comment]: <> (For example, if we choose polynomial regression as the regression algorithm, we have the possibility to adjust the model complexity)
+
+[comment]: <> (by choosing the polynomial degree. Thus, the polynomial degree represents a hyperparameter of the polynomial regression.)
+
+[comment]: <> (In order to find the polynomial degree that best reproduces the complexity of the problem and data set at hand, we could let the)
+
+[comment]: <> (polynomial degree take on any conceivable value, calculate the performance of the generated model via the loss and then choose)
+
+[comment]: <> (the polynomial degree at which the resulting model has shown the lowest loss.)
+
+[comment]: <> (But which values are conceivable for the polynomial degree? - The polynomial degree can basically be any integer value. From experience,)
+
+[comment]: <> (it can be said that most problems in fields such as engineering can be represented sufficiently accurately by models with polynomial degrees of less than 10.)
+
+[comment]: <> (Based on this experience, we could limit the hyperparameter space, for example, to a polynomial degree between 1 and 20.)
+
+[comment]: <> (In order to be sure to identify the polynomial degree at which the model shows the best performance,)
+
+[comment]: <> (we would have to evaluate every possible hyperparameter setting in this defined hyperparameter space.)
+
+[comment]: <> (We could implement a for-loop that performs the following calculation steps for each integer value between 0 and 20:)
+
+[comment]: <> (1. Define the polynomial regression algorithm with the specified hyperparameter setting)
+
+[comment]: <> (2. Build the model &#40;using the train data set&#41;)
+
+[comment]: <> (3. Evaluate the model &#40;using the validation or test data set&#41;)
+
+[comment]: <> (Afterwards we simply choose the polynomial degree for our model that shows the best performance in the evaluation process.)
 
 <figure class="image">
   <img src="/assets/img/posts/06_Bayesian Optimization/grid_search_polynomial_regression_example.png" style="width:100%">
@@ -102,6 +196,8 @@ hyperparameter settings that provide the greatest "information gain" for the mod
   </figcaption>
 </figure>
 
+## Grid Search vs. Baysian Optimization using SVR
+
 In order to be able to explain this concept step by step with a more realistic example, I use the Boston Housing Data set for the following
 chapters. I want to utilize the support vector regression algorithm to build a model which approximates the correlation between:
 
@@ -116,7 +212,7 @@ chapters. I want to utilize the support vector regression algorithm to build a m
   </figcaption>
 </figure>
 
-## Build a first model - Support Vector Regression
+### Build a first Support Vector Regression model
 
 In order to be able to understand the following hyperparameter optimisation steps,
 I will briefly describe the Support Vector Regression, how it works and the associated hyperparameters. If you are familiar with the
@@ -244,7 +340,7 @@ Each point on the function curve must be calculated more or less elaborately.
   </figcaption>
 </figure>
 
-## Finding the optimal hyperparameter settings
+### Finding the optimal hyperparameter settings
 
 In order to find the optimal hyperparameter settings, we could theoretically calculate the cross validation score
 for each possible hyperparameter combination and finally choose the hyperparameter that shows the best performance in the evaluation.
@@ -264,7 +360,7 @@ Grid Search thus represents the simplest type of hyperparameter optimization.
 We thus build up the function approximately with each calculation step bit by bit.
 
 <figure class="image">
-  <img src="/assets/img/posts/06_Bayesian Optimization/black_box_calculation.png" style="width:100%">
+  <img src="/assets/img/posts/06_Bayesian Optimization/Build_2d_evaluation.gif" style="width:100%">
   <figcaption align = "center">
     <b>Build up black-box function step for step – Image by the Author</b>
   </figcaption>
@@ -284,7 +380,7 @@ optimal hyperparameters increases rapidly.
 </figure>
 
 
-## Grid Search <a name="grid search"/>
+### Grid Search <a name="grid search"/>
 
 As shown in the following figure, we define a "grid" via the hyperparameter Space. If we consider the kernel to be fixed
 for the moment, the following two-dimensional hyperparameter Sapce results.
@@ -297,7 +393,7 @@ for the moment, the following two-dimensional hyperparameter Sapce results.
   </figcaption>
 </figure>
 
-# From Grid to Baysian Optimization <a name="grid to baysian"/>
+## From Grid to Baysian Optimization <a name="grid to baysian"/>
 
 Definitely a valid approach, at least for so called “cheap” black-box function, where the computation effort to calculate the CV values is low.
 But what if the evaluation of the function is costly, so the computational time and/or cost to calculate CV is high?
@@ -306,7 +402,7 @@ In this case it may makes sense to think about more “intelligent” ways to fi
 <figure class="image">
   <img src="/assets/img/posts/06_Bayesian Optimization/cheap_and_costly_black_box_function.png" style="width:100%">
   <figcaption align = "center">
-    <b>Cheap and costly black-box functions – Image by the Author</b>
+    <b>Cheap vs. costly black-box functions – Image by the Author</b>
   </figcaption>
 </figure>
 
