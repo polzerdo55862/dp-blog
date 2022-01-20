@@ -177,17 +177,14 @@ combinitation in the defined hyperparameter space. With the help of some calcula
 the loss function over the entire hyperparameter space - a so-called surrogate function. In our example, we could calculate the resulting loss for a polynomial
 degree of 2, 8 and 16 and use regression analysis to generate a function that approximates the loss over the entire hyperparameter space from 1 to 20.
 
-In Gaussian Process Regression, the resulting model provides not only an approximation of the true loss function but also the confidence interval to the
-non-calculated function areas. Simply put, the smaller the confidence interval (here: grey background) at a point in the function, the more certain the
-model is that the mean value (here: black curve) represents the actual loss value. If one would like to increase the accuracy of the approximation of the
-regression function, one could, for example, increase the size of the training data set. Since in our case, the loss values can be calculated for any
-hyperparameter combination, we can simply choose a few hyperparameters for which we want to determine the resulting loss of the model.
+In Gaussian Process Regression, the resulting model provides not only an approximation of the true loss function but also a meassurement of the
+uncertainty of the model for each hyperparameter combination. Simply put, the smaller the confidence interval (here: grey background) at a point in the function, the more certain the
+model is that the mean value (here: black curve) predicts/approximates the real loss value. If one would like to increase the accuracy of the approximation of the
+regression function, we could simply increase the size of the training data set. Since we can specifically choose a some hyperparameters and calculate the resulting loss of the model,
+its worth to think first what sampling point would probably result in the highest model improvement. A popular way to find the next sampling point, is to use the use the
+uncertainty of the model as as basis for the decision. So we would simply identify the part of model with the largest confidence interval.
 
-But which hyperparameter values should we choose in order to get the best approximation to the true loss function with as few calculation steps as possible? -
-Probably the most obvious would be to choose a hyperparameter value where the prediction of the current model has a large confidence interval.
-
-These and similar considerations are mapped into an acquisition function in the Baysian hyperparameter optimisation and help in the selection of the
-hyperparameter settings that provide the greatest "information gain" for the modelling of the Surrogate Function.
+These and similar considerations are mapped into an acquisition function, which is the basis for choosing the next sampling point.
 
 <figure class="image">
   <img src="/assets/img/posts/06_Bayesian Optimization/gaussian_process_example.png" style="width:100%">
@@ -198,8 +195,8 @@ hyperparameter settings that provide the greatest "information gain" for the mod
 
 ## Grid Search vs. Baysian Optimization using SVR
 
-In order to be able to explain this concept step by step with a more realistic example, I use the Boston Housing Data set for the following
-chapters. I want to utilize the support vector regression algorithm to build a model which approximates the correlation between:
+In order to be able to explain this concept step by step with a more realistic example, I am using the Boston Housing Data and utilize the support vector
+regression algorithm to build a model which approximates the correlation between:
 
 **Target varibale:** MEDV - Median value of owner-occupied homes in $1000's
 
@@ -211,6 +208,9 @@ chapters. I want to utilize the support vector regression algorithm to build a m
     <b>Boston housing data set - Image by the author (Data: [CST79])</b>
   </figcaption>
 </figure>
+
+The aim is thus to find the hyperparameter settings for which the resulting regression model shows the best possible representation of the data set at hand
+(the loss compared to the test data set becomes minimal).
 
 ### Build a first Support Vector Regression model
 
