@@ -410,14 +410,14 @@ One way is to define a "cheap" Surrogate Function.
 The Surrogate Function should approximates the black-box function f(x) [Cas13].
 
 Similiar to most regression problems, we want to model a surrogate function of the black-box function
-using a few calculated values, that gives a prediction for the hyperparameter space.
+using a few calculated values, that gives a prediction for the whole hyperparameter space.
 
 To model the surrogate function, a wide range of machine learning techniques is used,
 like Polynomial Regression, Support Vector Machine, Neuronal Nets and probably the most
 popular, the Gaussian Process (GP).
 
 Bayesian optimisation can thus be assigned to the field of active learning. Active Learning
-tries to mimize the labelling costs.
+tries to minimize the labelling costs.
 The aim is to replicate the black-box function as accurately as possible with as
 little computational effort as possible.
 computational effort.
@@ -475,26 +475,73 @@ true function. Since we usually have no knowledge about the true course of our
 black box function, a constant function
 with some covariance is usually freely chosen as the Priori Gauss.
 
+In order to calculate a first posteriori gaussian process, we need a calculated sample point of the true black-box function. Using this
+calculated "support point", we can already build a first GP regression model. In the following we are using the pobably most popular kernel, the
+Radial basis function (RBF).
+
+<script src="https://gist.github.com/polzerdo55862/24a79ea4467e7ff7000cbeca37c5c5c6.js"></script>
+
+<figure class="image">
+  <img src="/assets/img/posts/06_Bayesian Optimization/first_gp_model.png" style="width:100%">
+  <figcaption align = "center">
+    <b>Posteriori Gaussian Process – Image by the Author</b>
+  </figcaption>
+</figure>
 
 ....
 
 By knowing individual data points of the true function, the possible course of the
-function is gradually narrowed down.
-
+function is gradually narrowed down. As described briefly above, in this case we have the situation that we can freely choose the next calculation step.
+For this very purpose, we are introducing a so-called acquisition function.
 
 ### Acquisition Function
 
-The surrogate function is recalculated after each calculation step and serves as the
-basis for selecting the next calculation step.
-For this purpose, an acquisition function is introduced. The most popular
-acquisition function in the context of Hpyer parameter
-optimisation is the information gain.
+The most popular acquisition function in the context of Hpyerparameter
+optimisation is the Expected Improvement (EI). Further Acquisition Functions are Probability of improvement, Knowledge Gradient, Entropy Search or Predictive Entropy.
 
-In addition to the Expected Improvement the following Acquisition Functions are used:
+The EI is defined as following [Kra18][Jon98][Uai18][Has19]:
 
-- Knowledge gradient
-- Entropy search
-- Predictive entropy
+$$\operatorname{EI}(\mathbf{x}) =
+\begin{cases}
+(\mu(\mathbf{x}) - f(\mathbf{x}^+) - \xi)\Phi(Z) + \sigma(\mathbf{x})\phi(Z)  &\text{if}\ \sigma(\mathbf{x}) > 0 \\
+0 & \text{if}\ \sigma(\mathbf{x}) = 0
+\end{cases}$$
+
+where
+
+$$
+Z =
+\begin{cases}
+\frac{\mu(\mathbf{x}) - f(\mathbf{x}^+) - \xi}{\sigma(\mathbf{x})} &\text{if}\ \sigma(\mathbf{x}) > 0 \\
+0 & \text{if}\ \sigma(\mathbf{x}) = 0 \end{cases}
+$$
+
+        # mu is the mean of the distribution defined by the Gaussian process
+        # sigma is the standard deviation of the distribution defined by the Gaussian process
+        # norm.cdf(Z) is the standard normal cumulative density function
+        # norm.pdf(Z) is the standard normal probability density function
+        # xi is an exploration parameter
+
+
+----------
+Exploration vs. exploitation
+
+Intuitely all the methods described next try to geedily gain information about the maximum by giving an exploaration bonus to under-explored regions
+
+Aquistion Stategien sind in der Regel so definiert, dass wir lediglich daran interessiert sind, das optimum der betrachteten Funktion zu finden.
+
+dabei haben wir zwei maßgebende vorgehensweisen:
+1. Explorativ: wähle den Punkt auf der Funktion, bei dem das aktuelle Model die größte Uncertainty zeigt
+2. Exploitative: wähle den Punkt der stand jetzt den größten Wert zeigt und unstersuche den Bereich genauer
+
+Proposing sampling points in the search space is done by acquisition functions. They trade off exploitation and exploration.
+Exploitation means sampling where the surrogate model predicts a high objective and exploration means sampling at locations
+where the prediction uncertainty is high. Both correspond to high acquisition function values and the goal is to maximize the acquisition function to determine the next sampling point.
+[Kra18], https://nbviewer.org/github/krasserm/bayesian-machine-learning/blob/dev/bayesian-optimization/bayesian_optimization.ipynb
+------
+
+
+
 
 <figure class="image">
   <img src="/assets/img/posts/06_Bayesian Optimization/Visualize_baysian_opt.gif" style="width:100%">
@@ -503,14 +550,31 @@ In addition to the Expected Improvement the following Acquisition Functions are 
   </figcaption>
 </figure>
 
+## Summary
+
+---umschreiben
+There are a lot of great packages out there for either Bayesian optimization in general, and some for sklearn hyperparameter optimization specifically:
+
+HyperOpt
+skopt
+MOE
+HyperparameterHunter
+Spearmint
+BayesOpt
+SMAC
 
 ## References
 
-[Agn20] Agnihotri, Apoorv; Batra, Nipun.  https://distill.pub/2020/bayesian-optimization/. 2020. <br>
+[Agn20] Agnihotri, Apoorv; Batra, Nipun. Exploring Bayesian Optimization. https://distill.pub/2020/bayesian-optimization/. 2020. <br>
 [Cas13] Cassilo, Andrea. A Tutorial on Black–Box Optimization. https://www.lix.polytechnique.fr/~dambrosio/blackbox_material/Cassioli_1.pdf. 2013.<br>
 [CST79] U.S. Census Service. https://www.cs.toronto.edu/~delve/data/boston/bostonDetail.html <br>
 [Fah16] Fahrmeir, L.; Heumann, C.; Künstler, R. Statistik: Der Weg zur Datenanalyse. Springer-Lehrbuch. Springer Spektrum, Berlin and Heidelberg, 8., überarbeitete und ergänzte auflage Auflage, 2016. ISBN 978–3–662 50371–3. doi:10.1007/978–3–662–50372–0
+[Has19] Bayesian Hyperparameter Optimization using Gaussian Processes. 2018. https://brendanhasz.github.io/2019/03/28/hyperparameter-optimization.html#hyperparameter-optimization
 [Hel19] Helmenstine, Anne Marie. Bayes Theorem Definition and Examples. https://www.thoughtco.com/bayes-theorem-4155845. 2019. <br>
+[Jon98] Jones, D.R., Schonlau, M. & Welch, W.J. Efficient Global Optimization of Expensive Black-Box Functions. Journal of Global Optimization
+[Kra18] Martin Krasser. Bayesian optimization. http://krasserm.github.io/2018/03/21/bayesian-optimization/
 [Sci18] Sicotte, Xavier. Cross validation estimator. https://stats.stackexchange.com/questions/365224/cross-validation-and-confidence-interval-of-the-true-error/365231#365231. 2018 <br>
+[Uai18] UAI 2018. https://www.youtube.com/watch?v=C5nqEHpdyoE. 2018.
 [Was21] University of Washington. https://sites.math.washington.edu/. 2021. <br>
+
 
