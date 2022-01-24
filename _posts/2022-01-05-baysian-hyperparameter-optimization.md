@@ -234,10 +234,11 @@ within a defined range (-ϵ to +ϵ). Deviations that exceed the specified limit 
 $$
 \begin{align*}
   & minimize \quad \frac{1}{2} \cdot \| w \|^2 \\
-  & subject~to~\left( \begin{array}{ccc}
+  & subject~to~
+      \begin{cases}
       y_i - \langle w, x_i \rangle -b<=\epsilon \\
       \langle w, x_i \rangle +b-y_i<=\epsilon
-    \end{array} \right)
+      \end{cases}
 \end{align*}
 $$
 
@@ -254,25 +255,14 @@ Thus, the formulation according to Vapnik is as follows:
 $$
 \begin{align*}
   & minimize \quad \frac{1}{2} \cdot \| w \|^2 + C \sum_{i=1}^l (\zeta_i+\zeta_i^*) \\
-  & subject~to~\left( \begin{array}{ccc}
-      \quad y_i - \langle w, x_i \rangle -b<=\epsilon + \zeta_i \\
+  & subject~to~
+      \begin{cases}
+      y_i - \langle w, x_i \rangle -b<=\epsilon + \zeta_i \\
       y_i - \langle w, x_i \rangle -b<=\epsilon + \zeta_i \\
       \zeta_i,\zeta_i^*<=0
-    \end{array} \right)
+      \end{cases}
 \end{align*}
 $$
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 To evaluate the performance of the model for various hyperparameter settings a
@@ -384,7 +374,7 @@ optimal hyperparameters increases rapidly.
 
 As shown in the following figure, we define a "grid" via the hyperparameter Space. If we consider the kernel to be fixed
 for the moment, the following two-dimensional hyperparameter Sapce results.
-($$C\_min = 1$$, $$C\_max = 50$$, $$Epsilon\_min = 1$$, $$Epsilon\_max = 30$$, $$step\_size = 1$$)
+($$C\_{min} = 1$$, $$C\_{max} = 50$$, $$\epsilon_{min} = 1$$, $$\epsilon_{max} = 30$$, $$step\_size = 1$$)
 
 <figure class="image">
   <img src="/assets/img/posts/06_Bayesian Optimization/grid_search_example.png" style="width:100%">
@@ -393,11 +383,22 @@ for the moment, the following two-dimensional hyperparameter Sapce results.
   </figcaption>
 </figure>
 
+The figure already shows that the optimum in the selected hyperparameter space must lie approximately in the lower,
+right-hand part. The dots in the right-hand graph indicate which hyperparameter combination was investigated.
+
+For the example shown, this results in 1500 evaluated data points. Since we use cross validation for evaluation,
+a 5-fold cross validation results in $$1500 x 5 = 7500$$ models that have to be built and evaluated.
+
+Although we choose an exceptionally high granularity for the example, algorithms with 3, 4 or 5 hyperparameters
+nevertheless require an enormous amount of computing power. hyperparameters, there is an enormous computational demand.
+
 ## From Grid to Baysian Optimization <a name="grid to baysian"/>
 
-Definitely a valid approach, at least for so called “cheap” black-box function, where the computation effort to calculate the CV values is low.
-But what if the evaluation of the function is costly, so the computational time and/or cost to calculate CV is high?
-In this case it may makes sense to think about more “intelligent” ways to find the optimal value. [Cas13]
+Basically a valid approach, but if one is talking about so-called "costly" black-box functions,
+it is worthwhile to the use of alternative hyperparameter optimisation methods [Cas13].
+
+The distinction between "costly" and "cheap" is usually made on the basis of the time required for the evaluation,
+the computing power required and/or the capital investment required.
 
 <figure class="image">
   <img src="/assets/img/posts/06_Bayesian Optimization/cheap_and_costly_black_box_function.png" style="width:100%">
@@ -406,43 +407,25 @@ In this case it may makes sense to think about more “intelligent” ways to fi
   </figcaption>
 </figure>
 
-One way is to define a "cheap" Surrogate Function.
-The Surrogate Function should approximates the black-box function f(x) [Cas13].
+The computational effort required to calculate the black box function depends on various factors, such as the dimensionality
+of the hyperparameter space, the operating principle of the chosen algorithm, as well as the subsequent evaluation of
+the models formed.
 
-Similiar to most regression problems, we want to model a surrogate function of the black-box function
-using a few calculated values, that gives a prediction for the whole hyperparameter space.
+If, for example, the available computing power is limited and a hyperparameter combination
+already takes several seconds or minutes, it may make sense to look for solutions that reduce
+the number of data points to be calculated in the black-box function.
 
-To model the surrogate function, a wide range of machine learning techniques is used,
-like Polynomial Regression, Support Vector Machine, Neuronal Nets and probably the most
-popular, the Gaussian Process (GP).
+Bayesian Optimization introduces the surrogate function for this very purpose. In this case,
+the surrogate function is a calculated regression model that is supposed to approximate the real
+black-box function on the basis of a few sampling points.
 
-Bayesian optimisation can thus be assigned to the field of active learning. Active Learning
-tries to minimize the labelling costs.
-The aim is to replicate the black-box function as accurately as possible with as
-little computational effort as possible.
-computational effort.
+Basically, in Bayesian Optimization we try to reduce the uncertainty of the model step by step, with each additional
+sampling point calculated - usually focusing on areas where the global maximum of the function is likely to lie.
 
-If we speak of Gaussian hyperparameter optimisation, we are moving in the
-field of uncertainty reduction.
-
-As a rule, the variance is used as a measure of uncertainty. The Gaussian Process (GP)
-is able to map the
-the uncertainty as well. [Agn20]
-
-For the above regression problem, the following black-box function results.
-In order to be able to map the function with sufficient accuracy for the defined
-hyperparameter space, this range must be appropriately fine-granularly ebased.
-In this case we assume a predefined hyperparameter space (epsilon = 1 - 15).
-
-<figure class="image">
-  <img src="/assets/img/posts/06_Bayesian Optimization/hyperparameter_evaluation_2d_gif_step_size_1.1.png" style="width:100%">
-  <figcaption align = "center">
-    <b>Grid Search example – Image by the Author</b>
-  </figcaption>
-</figure>
-
-In total, the time needed to compute the needed sample values and the surrogate function,
-should be less time-consuming than calculating each point in the hyperparameter space.
+Sounds like an extremely effective approach in itself, although one must take into account that this procedure also
+results in additional computational effort and that a sufficient replication of the black-box function cannot always
+be achieved. While Grid Search ends with the evaluation of the model performance, Bayesian hyperparameter optimization
+additionally models and calculates the Surrogate and Acquisition Function.
 
 <figure class="image">
   <img src="/assets/img/posts/06_Bayesian Optimization/evaluation_steps.png" style="width:100%">
@@ -463,11 +446,12 @@ of how the Gaussian Process Regression works can be found in "Gaussian
 Processes for Machine Learning" by Carl Edward Rasmussen and Christopher
 K. I. Williams, which is available for free at:
 
-http://www.gaussianprocess.org/gpml/chapters/
+<a href="http://www.gaussianprocess.org/gpml/chapters/">www.gaussianprocess.org</a>
 
 You can also find an explanation of Gauss Process Regression in one of my recent articles:
 
-https://towardsdatascience.com/7-of-the-most-commonly-used-regression-algorithms-and-how-to-choose-the-right-one-fc3c8890f9e3
+<a href="https://towardsdatascience.com/7-of-the-most-commonly-used-regression-algorithms-and-how-to-choose-the-right-one-fc3c8890f9e3
+">towardsdatascience.com/7-of-the-most-commonly-used-regression-algorithms-and-how-to-choose-the-right-one</a>
 
 In short, Gaussian process regression defines a priori Gaussian process that already
 includes prior knowledge of the
@@ -480,6 +464,18 @@ calculated "support point", we can already build a first GP regression model. In
 Radial basis function (RBF).
 
 <script src="https://gist.github.com/polzerdo55862/24a79ea4467e7ff7000cbeca37c5c5c6.js"></script>
+
+Since we usually have no knowledge about how the black box function runs, we choose for the Priori Gaussian Process a mean
+parallel to the x-axis at y=0. As a kernel, we use one of the most frequently used kernels, the Radial Basis Function (RBF).
+Since we assume that the point lies directly on the "true" black box function by directly calculating the sampling points
+(shown here in red), a covariance of zero results at the height of the calculated point. In the figure, the level of model
+uncertainty is visualised by the standard deviation and highlighted in grey.
+
+It is precisely this measure of the uncertainty of the model that we use in the following to identify the "best possible"
+next sampling point. How exactly this selection is made depends on the specific acquisition function chosen.
+
+In the following we concentrate on the most popular acquisition function "Expected Improvement" - if it
+is not explicitly stated which acquisition function is used, it is usually EI.
 
 <figure class="image">
   <img src="/assets/img/posts/06_Bayesian Optimization/first_gp_model.png" style="width:100%">
@@ -516,13 +512,29 @@ Z =
 0 & \text{if}\ \sigma(\mathbf{x}) = 0 \end{cases}
 $$
 
-        # mu is the mean of the distribution defined by the Gaussian process
-        # sigma is the standard deviation of the distribution defined by the Gaussian process
-        # norm.cdf(Z) is the standard normal cumulative density function
-        # norm.pdf(Z) is the standard normal probability density function
-        # xi is an exploration parameter
+and
 
+* $$\mu$$: is the mean of the distribution defined by the Gaussian process
+* $$\sigma$$: is the standard deviation of the distribution defined by the Gaussian process
+* $$\Phi()$$: is the standard normal cumulative density function (cdf)
+* $$\phi()$$: is the standard normal probability density function (pdf)
+* $$\xi$$: is an exploration parameter
 
+<figure class="image">
+  <img src="/assets/img/posts/06_Bayesian Optimization/expected_improvement_explained.png" style="width:100%">
+  <figcaption align = "center">
+    <b>Posteriori Gaussian Process – Image by the Author</b>
+  </figcaption>
+</figure>
+
+### Exploration vs. exploitation
+
+<figure class="image">
+  <img src="/assets/img/posts/06_Bayesian Optimization/expected_improvement_explained_2.png" style="width:100%">
+  <figcaption align = "center">
+    <b>Posteriori Gaussian Process – Image by the Author</b>
+  </figcaption>
+</figure>
 ----------
 Exploration vs. exploitation
 
