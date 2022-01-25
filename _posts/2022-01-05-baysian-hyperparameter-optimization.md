@@ -520,6 +520,15 @@ and
 * $$\phi()$$: is the standard normal probability density function (pdf)
 * $$\xi$$: is an exploration parameter
 
+Für das Anschauungsbeispiel wählen wir im ersten Schritt ein zufälliges Sampling Set, für welches wir den Wert der Black-box Funktion ermitteln.
+In der Abbildung wählen wir für den ersten Schritt lediglich einen sampling Point und fitten ein ersten Gaussian Prozess Regression Model.
+Da wir wie oben bereits erläutert, keinen Noise vorraussetzen, wird die Kovarianz im Bereich des sampling pionts null, der Mean der Regressionsgerade
+verläuft direkt durch den Punkt. Rechts und links davon, wächst die Kovarianz und damit die Unsicherheit des Models an.
+
+Mit der oben aufgeführten Formel berechnen wir nun Acquisition Funktion über den Hyperparameter Space. $$f(x^{+})$$ beschreibt dabei den Maximalwert aller
+bisher berechneten sample punkte. Da wir in der Abbildung nur einen Punkt berechnet haben, ist $$f(x^{+})$$ der Funktionswert bei dem gewählten sample Point - hier bei $$-31.0$$.
+$$\sigma$$ und $$\mu$$ werden durch das Gaussian Prozess Regressionsmodell beschrieben. In der Abbildung hab ich beide Werte beispielhaft für $$x=15$$ eingezeichnet.
+
 <figure class="image">
   <img src="/assets/img/posts/06_Bayesian Optimization/expected_improvement_explained.png" style="width:100%">
   <figcaption align = "center">
@@ -527,7 +536,19 @@ and
   </figcaption>
 </figure>
 
-### Exploration vs. exploitation
+Betrachtet man die Formel nun genauer, fällt auf, dass EI aus zwei Teilen besteht:
+
+* der linke Teil beschreibt die Differenz zwischen dem Mittelwert des Gaussian Prozess Regressionsmodel und dem max. f(x) Wert aller sampling points
+* der rechte Teil die uncertainty des Modells mit Hilfe der Standardabweichung
+
+Wie beide Teile gewichtet werden, hängt von CDF(Z) und PDF(Z) ab. Ist die Differenz zwischen $$f(x^{+})$$ und $$\mu$$ sehr groß gegenüber der Standardabweichung des
+Regressionsmodels, geht CDF(Z) gegen 1 und PDF(Z) gegen 0. Damit werden Bereiche, stärker gewichtet, bei denen der Mittelwert des Models deutlich über dem bisher maximalen $$f(x^{+})$$ der Sampling Punkte liegt.
+Durch den Exploration Parameter kann frei festgelegt und dadurch die Gewichtung etwas steuern.
+
+Man spricht heribei von einem tradeoff zwischen Exploration und exploitation, welche eben durch die beiden Termbestandteile wiedergespiegelt werden:
+
+1. Explorativ: wähle den Punkt auf der Funktion, bei dem das aktuelle Model die größte Uncertainty zeigt
+2. Exploitative: wähle den Punkt der stand jetzt den größten Wert zeigt und unstersuche den Bereich genauer
 
 <figure class="image">
   <img src="/assets/img/posts/06_Bayesian Optimization/expected_improvement_explained_2.png" style="width:100%">
@@ -535,24 +556,10 @@ and
     <b>Posteriori Gaussian Process – Image by the Author</b>
   </figcaption>
 </figure>
-----------
-Exploration vs. exploitation
 
-Intuitely all the methods described next try to geedily gain information about the maximum by giving an exploaration bonus to under-explored regions
-
-Aquistion Stategien sind in der Regel so definiert, dass wir lediglich daran interessiert sind, das optimum der betrachteten Funktion zu finden.
-
-dabei haben wir zwei maßgebende vorgehensweisen:
-1. Explorativ: wähle den Punkt auf der Funktion, bei dem das aktuelle Model die größte Uncertainty zeigt
-2. Exploitative: wähle den Punkt der stand jetzt den größten Wert zeigt und unstersuche den Bereich genauer
-
-Proposing sampling points in the search space is done by acquisition functions. They trade off exploitation and exploration.
-Exploitation means sampling where the surrogate model predicts a high objective and exploration means sampling at locations
-where the prediction uncertainty is high. Both correspond to high acquisition function values and the goal is to maximize the acquisition function to determine the next sampling point.
-[Kra18], https://nbviewer.org/github/krasserm/bayesian-machine-learning/blob/dev/bayesian-optimization/bayesian_optimization.ipynb
-------
-
-
+Nach der Berechnung der Acquisition Funktion, identifizieren wir lediglich den Hyperparameter wert $x$ (hier: Epsilon), bei dem EI maximal ist und führen die Berechnung der
+Black-box Funktion für diesen Wert durch. Anschließend führen die Berechnung der Acquisition Funktion erneut durch und identifizieren den nächsten sampling Point für die
+nächste Iteration.
 
 
 <figure class="image">
@@ -580,13 +587,13 @@ SMAC
 [Agn20] Agnihotri, Apoorv; Batra, Nipun. Exploring Bayesian Optimization. https://distill.pub/2020/bayesian-optimization/. 2020. <br>
 [Cas13] Cassilo, Andrea. A Tutorial on Black–Box Optimization. https://www.lix.polytechnique.fr/~dambrosio/blackbox_material/Cassioli_1.pdf. 2013.<br>
 [CST79] U.S. Census Service. https://www.cs.toronto.edu/~delve/data/boston/bostonDetail.html <br>
-[Fah16] Fahrmeir, L.; Heumann, C.; Künstler, R. Statistik: Der Weg zur Datenanalyse. Springer-Lehrbuch. Springer Spektrum, Berlin and Heidelberg, 8., überarbeitete und ergänzte auflage Auflage, 2016. ISBN 978–3–662 50371–3. doi:10.1007/978–3–662–50372–0
-[Has19] Bayesian Hyperparameter Optimization using Gaussian Processes. 2018. https://brendanhasz.github.io/2019/03/28/hyperparameter-optimization.html#hyperparameter-optimization
+[Fah16] Fahrmeir, L.; Heumann, C.; Künstler, R. Statistik: Der Weg zur Datenanalyse. Springer-Lehrbuch. Springer Spektrum, Berlin and Heidelberg, 8., überarbeitete und ergänzte auflage Auflage, 2016. ISBN 978–3–662 50371–3. doi:10.1007/978–3–662–50372–0 <br>
+[Has19] Bayesian Hyperparameter Optimization using Gaussian Processes. 2018. https://brendanhasz.github.io/2019/03/28/hyperparameter-optimization.html#hyperparameter-optimization <br>
 [Hel19] Helmenstine, Anne Marie. Bayes Theorem Definition and Examples. https://www.thoughtco.com/bayes-theorem-4155845. 2019. <br>
-[Jon98] Jones, D.R., Schonlau, M. & Welch, W.J. Efficient Global Optimization of Expensive Black-Box Functions. Journal of Global Optimization
-[Kra18] Martin Krasser. Bayesian optimization. http://krasserm.github.io/2018/03/21/bayesian-optimization/
+[Jon98] Jones, D.R., Schonlau, M. & Welch, W.J. Efficient Global Optimization of Expensive Black-Box Functions. Journal of Global Optimization <br>
+[Kra18] Martin Krasser. Bayesian optimization. http://krasserm.github.io/2018/03/21/bayesian-optimization/ <br>
 [Sci18] Sicotte, Xavier. Cross validation estimator. https://stats.stackexchange.com/questions/365224/cross-validation-and-confidence-interval-of-the-true-error/365231#365231. 2018 <br>
-[Uai18] UAI 2018. https://www.youtube.com/watch?v=C5nqEHpdyoE. 2018.
+[Uai18] UAI 2018. https://www.youtube.com/watch?v=C5nqEHpdyoE. 2018. <br>
 [Was21] University of Washington. https://sites.math.washington.edu/. 2021. <br>
 
 
